@@ -18,6 +18,19 @@ A file-backed priority queue implemented in Python using two heaps and JSON pers
 * Custom exceptions
 * Automated pytest test suite
 
+## Real-World Use Cases
+
+Priority queues are useful whenever work needs to be processed according to importance or urgency rather than simple arrival order.
+
+Examples include:
+
+- **Task scheduling:** Execute high-priority jobs before lower-priority jobs.
+- **Operating systems:** Schedule processes based on priority.
+- **Network systems:** Process latency-sensitive or high-priority packets first.
+- **Pathfinding:** Algorithms such as Dijkstra's and A* use priority queues to select the next most promising node.
+- **Event-driven systems:** Process events according to their scheduled time or priority.
+- **Background job processing:** Process urgent jobs before normal or low-priority jobs.
+- 
 ## Design
 
 The queue uses:
