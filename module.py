@@ -132,9 +132,10 @@ class PersistentPriorityQueue:
 
     def extract_min(self) -> QueueItem:
         while self._min_heap:
-            entry = heapq.heappop(self._min_heap)
+            entry = self._min_heap[0]
 
             if not self._is_entry_valid(entry):
+                heapq.heappop(self._min_heap)
                 continue
 
             _, _, _, item_id = entry
@@ -143,15 +144,17 @@ class PersistentPriorityQueue:
             new_items = self._items.copy()
             del new_items[item_id]
 
-            # Persist first.
+            # Persist before modifying the heap.
             self._save_state(new_items, self._next_sequence)
 
-            # Commit only after persistence succeeds.
+            # Commit after persistence succeeds.
+            heapq.heappop(self._min_heap)
             self._items = new_items
 
             return item
 
         raise EmptyQueueError("priority queue is empty")
+    
     def _item_to_dict(self, item: QueueItem) -> dict:
         return {
             "id": item.id,
@@ -261,9 +264,10 @@ class PersistentPriorityQueue:
 
     def extract_max(self) -> QueueItem:
         while self._max_heap:
-            entry = heapq.heappop(self._max_heap)
+            entry = self._max_heap[0]
 
             if not self._is_entry_valid(entry):
+                heapq.heappop(self._max_heap)
                 continue
 
             _, _, _, item_id = entry
@@ -272,15 +276,17 @@ class PersistentPriorityQueue:
             new_items = self._items.copy()
             del new_items[item_id]
 
-            # Persist first.
+            # Persist before modifying the heap.
             self._save_state(new_items, self._next_sequence)
 
-            # Commit only after persistence succeeds.
+            # Commit after persistence succeeds.
+            heapq.heappop(self._max_heap)
             self._items = new_items
 
             return item
 
         raise EmptyQueueError("priority queue is empty")
+
     def is_empty(self) -> bool:
         return not self._items
 

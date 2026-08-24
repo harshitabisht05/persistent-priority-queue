@@ -319,3 +319,124 @@ def test_delete_persists_across_restart(tmp_path):
 
     assert item.id not in queue2._items
     assert queue2.is_empty()
+
+def test_insert_does_not_change_memory_when_save_fails(tmp_path, monkeypatch):
+    path = tmp_path / "queue.json"
+    queue = PersistentPriorityQueue(path)
+
+    def fail_save(*args, **kwargs):
+        raise PersistenceError("save failed")
+
+    monkeypatch.setattr(queue, "_save_state", fail_save)
+
+    with pytest.raises(PersistenceError):
+        queue.insert(5, "Task")
+
+    assert queue.is_empty()
+    assert queue._next_sequence == 0
+
+def test_update_does_not_change_memory_when_save_fails(tmp_path, monkeypatch):
+    path = tmp_path / "queue.json"
+    queue = PersistentPriorityQueue(path)
+
+    item = queue.insert(5, "Task")
+
+    def fail_save(*args, **kwargs):
+        raise PersistenceError("save failed")
+
+    monkeypatch.setattr(queue, "_save_state", fail_save)
+
+    with pytest.raises(PersistenceError):
+        queue.update(item.id, priority=1)
+
+    current = queue._items[item.id]
+
+    assert current.priority == 5
+    assert current.value == "Task"
+    assert current.version == 0
+
+def test_delete_does_not_change_memory_when_save_fails(tmp_path, monkeypatch):
+    path = tmp_path / "queue.json"
+    queue = PersistentPriorityQueue(path)
+
+    item = queue.insert(5, "Task")
+
+    def fail_save(*args, **kwargs):
+        raise PersistenceError("save failed")
+
+    monkeypatch.setattr(queue, "_save_state", fail_save)
+
+    with pytest.raises(PersistenceError):
+        queue.delete(item.id)
+
+    assert item.id in queue._items
+
+def test_extract_min_does_not_change_memory_when_save_fails(tmp_path, monkeypatch):
+    path = tmp_path / "queue.json"
+    queue = PersistentPriorityQueue(path)
+
+    item = queue.insert(5, "Task")
+
+    def fail_save(*args, **kwargs):
+        raise PersistenceError("save failed")
+
+    monkeypatch.setattr(queue, "_save_state", fail_save)
+
+    with pytest.raises(PersistenceError):
+        queue.extract_min()
+
+    assert item.id in queue._items
+
+def test_extract_max_does_not_change_memory_when_save_fails(tmp_path, monkeypatch):
+    path = tmp_path / "queue.json"
+    queue = PersistentPriorityQueue(path)
+
+    item = queue.insert(5, "Task")
+
+    def fail_save(*args, **kwargs):
+        raise PersistenceError("save failed")
+
+    monkeypatch.setattr(queue, "_save_state", fail_save)
+
+    with pytest.raises(PersistenceError):
+        queue.extract_max()
+
+    assert item.id in queue._items
+
+def test_extract_min_does_not_change_heap_when_save_fails(tmp_path, monkeypatch):
+    path = tmp_path / "queue.json"
+    queue = PersistentPriorityQueue(path)
+
+    item = queue.insert(5, "Task")
+
+    original_min_heap = queue._min_heap.copy()
+
+    def fail_save(*args, **kwargs):
+        raise PersistenceError("save failed")
+
+    monkeypatch.setattr(queue, "_save_state", fail_save)
+
+    with pytest.raises(PersistenceError):
+        queue.extract_min()
+
+    assert queue._min_heap == original_min_heap
+    assert item.id in queue._items
+
+def test_extract_max_does_not_change_heap_when_save_fails(tmp_path, monkeypatch):
+    path = tmp_path / "queue.json"
+    queue = PersistentPriorityQueue(path)
+
+    item = queue.insert(5, "Task")
+
+    original_max_heap = queue._max_heap.copy()
+
+    def fail_save(*args, **kwargs):
+        raise PersistenceError("save failed")
+
+    monkeypatch.setattr(queue, "_save_state", fail_save)
+
+    with pytest.raises(PersistenceError):
+        queue.extract_max()
+
+    assert queue._max_heap == original_max_heap
+    assert item.id in queue._items
